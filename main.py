@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import sounddevice as sd
+from scipy.io.wavfile import write
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     """Cosine similarity works the same in 3-D or (44100,)."""
@@ -8,6 +9,19 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     if denom == 0:
         raise ValueError("Cannot compute cosine similarity for a zero vector.")
     return float(np.dot(a, b) / denom)
+
+def record_audio(duration: float = 5.0) -> np.ndarray:
+    print(f"Recording audio for {duration} seconds...")
+
+    F = sd.rec(
+        int(duration * 44100),
+        samplerate=44100,
+        channels=1,
+        dtype="float32",
+    )
+    sd.wait()
+    print("Recording complete.")
+    return F.flatten()
 
 
 def plot_vectors_3d(f1: np.ndarray, f2: np.ndarray) -> None:
@@ -33,19 +47,13 @@ def plot_vectors_3d(f1: np.ndarray, f2: np.ndarray) -> None:
 
 def main() -> None:
     # Two sound-like vectors (later these can be waveform samples)
-    f1 = np.array([1.0, 2.0, 3.0])
-    f2 = np.array([1.2, 1.8, 2.9])
-
+    f1 = record_audio()
+    f2 = np.convolve(f1, [0.25, 0.5, 0.25], mode="same")
     similarity = cosine_similarity(f1, f2)
 
     print("F1:", f1)
     print("F2:", f2)
     print("Cosine similarity:", similarity)
-    print("Close to 1: almost the same direction.")
-    print("Around 0: very different directions.")
-    print("Near -1: opposite directions.")
-
-    plot_vectors_3d(f1, f2)
 
 
 if __name__ == "__main__":
